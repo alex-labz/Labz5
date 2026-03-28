@@ -1650,6 +1650,29 @@ export default function AppPage() {
   const { data: kols = [], isLoading: kolsLoading } = useListKols();
   const { data: campaigns = [], isLoading: campaignsLoading } = useListCampaigns();
 
+  // Live notification tracking — fetch posts for red-dot badges
+  const { data: allPosts = [] } = useListPosts();
+
+  const SEEN_POST_KEY = "labz_seen_post_id";
+  const SEEN_CAMPAIGN_KEY = "labz_seen_campaign_id";
+
+  const latestPostId = allPosts.length > 0 ? Math.max(...(allPosts as any[]).map((p) => p.id)) : 0;
+  const latestCampaignId = campaigns.length > 0 ? Math.max(...campaigns.map((c) => c.id)) : 0;
+  const hasNewPosts = latestPostId > parseInt(localStorage.getItem(SEEN_POST_KEY) ?? "0");
+  const hasNewCampaigns = latestCampaignId > parseInt(localStorage.getItem(SEEN_CAMPAIGN_KEY) ?? "0");
+
+  const handleKolTab = (t: KolTab) => {
+    setKolTab(t);
+    if (t === "feed") localStorage.setItem(SEEN_POST_KEY, String(latestPostId));
+    if (t === "campaigns") localStorage.setItem(SEEN_CAMPAIGN_KEY, String(latestCampaignId));
+  };
+
+  const handleProjectTab = (t: ProjectTab) => {
+    setProjectTab(t);
+    if (t === "feed") localStorage.setItem(SEEN_POST_KEY, String(latestPostId));
+    if (t === "kols") localStorage.setItem(SEEN_CAMPAIGN_KEY, String(latestCampaignId));
+  };
+
   const isVerifiedKol = authUser && userApp?.status === "verified" && userApp?.type === "kol";
   const isVerifiedProject = authUser && userApp?.status === "verified" && userApp?.type === "project";
   const isVerifiedDashboard = isVerifiedKol || isVerifiedProject;

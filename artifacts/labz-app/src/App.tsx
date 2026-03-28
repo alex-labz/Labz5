@@ -10,7 +10,15 @@ import CasesPage from "@/pages/cases";
 import AdminPage from "@/pages/admin";
 import NotFound from "@/pages/not-found";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchInterval: 30_000,
+      refetchOnWindowFocus: true,
+      staleTime: 15_000,
+    },
+  },
+});
 
 function Router() {
   return (
