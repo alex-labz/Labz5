@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Labz App"
+version = "1.0.0"
+id = "artifacts/labz-app"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21183
+
+[services.development]
+run = "pnpm --filter @workspace/labz-app run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/labz-app", "run", "build" ]
+publicDir = "artifacts/labz-app/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21183"
+BASE_PATH = "/"
