@@ -1,22 +1,38 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: InfoFi Labz API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: kols
+    description: KOL influencer operations
+  - name: campaigns
+    description: Campaign operations
+  - name: cases
+    description: Case study operations
+  - name: applications
+    description: KOL/Project connection applications
+  - name: sections
+    description: App section management
+  - name: tags
+    description: Tag management
+  - name: users
+    description: User profile management
+  - name: posts
+    description: Admin feed posts
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +40,682 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthInput"
+      responses:
+        "201":
+          description: Created user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "409":
+          description: Login already taken
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Log in a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthInput"
+      responses:
+        "200":
+          description: Authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /applications/user/{userId}:
+    get:
+      operationId: listUserApplications
+      tags: [applications]
+      summary: Get applications for a specific user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of user's applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Application"
+
+  /kols:
+    get:
+      operationId: listKols
+      tags: [kols]
+      summary: List all KOLs
+      responses:
+        "200":
+          description: List of KOLs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Kol"
+    post:
+      operationId: createKol
+      tags: [kols]
+      summary: Create a KOL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KolInput"
+      responses:
+        "201":
+          description: Created KOL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Kol"
+
+  /kols/{id}:
+    put:
+      operationId: updateKol
+      tags: [kols]
+      summary: Update a KOL
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KolInput"
+      responses:
+        "200":
+          description: Updated KOL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Kol"
+    delete:
+      operationId: deleteKol
+      tags: [kols]
+      summary: Delete a KOL
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+
+  /campaigns:
+    get:
+      operationId: listCampaigns
+      tags: [campaigns]
+      summary: List all campaigns
+      parameters:
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of campaigns
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Campaign"
+    post:
+      operationId: createCampaign
+      tags: [campaigns]
+      summary: Create a campaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CampaignInput"
+      responses:
+        "201":
+          description: Created campaign
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+
+  /campaigns/{id}:
+    put:
+      operationId: updateCampaign
+      tags: [campaigns]
+      summary: Update a campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CampaignInput"
+      responses:
+        "200":
+          description: Updated campaign
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+    delete:
+      operationId: deleteCampaign
+      tags: [campaigns]
+      summary: Delete a campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+
+  /cases:
+    get:
+      operationId: listCases
+      tags: [cases]
+      summary: List all cases
+      responses:
+        "200":
+          description: List of cases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Case"
+    post:
+      operationId: createCase
+      tags: [cases]
+      summary: Create a case
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaseInput"
+      responses:
+        "201":
+          description: Created case
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Case"
+
+  /cases/{id}:
+    put:
+      operationId: updateCase
+      tags: [cases]
+      summary: Update a case
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaseInput"
+      responses:
+        "200":
+          description: Updated case
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Case"
+    delete:
+      operationId: deleteCase
+      tags: [cases]
+      summary: Delete a case
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+
+  /applications/{id}/status:
+    patch:
+      operationId: updateApplicationStatus
+      tags: [applications]
+      summary: Update application status (approve or reject)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApplicationStatusUpdate"
+      responses:
+        "200":
+          description: Updated application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Application"
+        "404":
+          description: Application not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /applications:
+    get:
+      operationId: listApplications
+      tags: [applications]
+      summary: List all applications
+      responses:
+        "200":
+          description: List of applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Application"
+    post:
+      operationId: createApplication
+      tags: [applications]
+      summary: Submit an application (KOL or Project)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApplicationInput"
+      responses:
+        "201":
+          description: Created application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Application"
+
+  /sections:
+    get:
+      operationId: listSections
+      tags: [sections]
+      summary: List all app sections
+      responses:
+        "200":
+          description: List of sections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Section"
+    post:
+      operationId: createSection
+      tags: [sections]
+      summary: Create an app section
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SectionInput"
+      responses:
+        "201":
+          description: Created section
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Section"
+
+  /sections/{id}:
+    put:
+      operationId: updateSection
+      tags: [sections]
+      summary: Update an app section
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SectionInput"
+      responses:
+        "200":
+          description: Updated section
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Section"
+    delete:
+      operationId: deleteSection
+      tags: [sections]
+      summary: Delete an app section
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+
+  /tags:
+    get:
+      operationId: listTags
+      tags: [tags]
+      summary: List all tags
+      parameters:
+        - name: sectionId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of tags
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tag"
+    post:
+      operationId: createTag
+      tags: [tags]
+      summary: Create a tag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TagInput"
+      responses:
+        "201":
+          description: Created tag
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tag"
+
+  /tags/{id}:
+    put:
+      operationId: updateTag
+      tags: [tags]
+      summary: Update a tag
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TagInput"
+      responses:
+        "200":
+          description: Updated tag
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tag"
+    delete:
+      operationId: deleteTag
+      tags: [tags]
+      summary: Delete a tag
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all users
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserProfile"
+
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get a user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/{id}/profile:
+    patch:
+      operationId: updateUserProfile
+      tags: [users]
+      summary: Update user bio and EVM wallet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserProfileUpdate"
+      responses:
+        "200":
+          description: Updated user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/{id}/rank:
+    patch:
+      operationId: updateUserRank
+      tags: [users]
+      summary: Set a user's rank (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRankUpdate"
+      responses:
+        "200":
+          description: Updated user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "400":
+          description: Invalid rank
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /posts:
+    get:
+      operationId: listPosts
+      tags: [posts]
+      summary: List all feed posts
+      responses:
+        "200":
+          description: List of posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+    post:
+      operationId: createPost
+      tags: [posts]
+      summary: Create a feed post (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostInput"
+      responses:
+        "201":
+          description: Created post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+
+  /posts/{id}:
+    delete:
+      operationId: deletePost
+      tags: [posts]
+      summary: Delete a feed post (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +726,439 @@ components:
       required:
         - status
 
+    Kol:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        followers:
+          type: string
+        niche:
+          type: string
+        imageUrl:
+          type: string
+        twitter:
+          type: string
+          nullable: true
+        telegram:
+          type: string
+          nullable: true
+      required:
+        - id
+        - name
+        - followers
+        - niche
+        - imageUrl
+
+    KolInput:
+      type: object
+      properties:
+        name:
+          type: string
+        followers:
+          type: string
+        niche:
+          type: string
+        imageUrl:
+          type: string
+        twitter:
+          type: string
+        telegram:
+          type: string
+      required:
+        - name
+        - followers
+        - niche
+        - imageUrl
+
+    Campaign:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        tag:
+          type: string
+        description:
+          type: string
+        applyLink:
+          type: string
+        imageUrl:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+          description: "active, closed, or pending"
+        tagIds:
+          type: array
+          items:
+            type: integer
+      required:
+        - id
+        - title
+        - tag
+        - description
+        - applyLink
+        - imageUrl
+        - type
+        - status
+        - tagIds
+
+    CampaignInput:
+      type: object
+      properties:
+        title:
+          type: string
+        tag:
+          type: string
+        description:
+          type: string
+        applyLink:
+          type: string
+        imageUrl:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+          description: "active, closed, or pending"
+        tagIds:
+          type: array
+          items:
+            type: integer
+      required:
+        - title
+        - tag
+        - description
+        - applyLink
+        - imageUrl
+        - type
+        - status
+        - tagIds
+
+    Case:
+      type: object
+      properties:
+        id:
+          type: integer
+        project:
+          type: string
+        result:
+          type: string
+        category:
+          type: string
+        imageUrl:
+          type: string
+      required:
+        - id
+        - project
+        - result
+        - category
+        - imageUrl
+
+    CaseInput:
+      type: object
+      properties:
+        project:
+          type: string
+        result:
+          type: string
+        category:
+          type: string
+        imageUrl:
+          type: string
+      required:
+        - project
+        - result
+        - category
+        - imageUrl
+
+    AuthInput:
+      type: object
+      properties:
+        login:
+          type: string
+        password:
+          type: string
+      required:
+        - login
+        - password
+
+    AuthUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        login:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - login
+        - createdAt
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    Application:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          description: "kol or project"
+        name:
+          type: string
+        telegram:
+          type: string
+        socialMedia:
+          type: string
+        additionalLink1:
+          type: string
+          nullable: true
+        additionalLink2:
+          type: string
+          nullable: true
+        about:
+          type: string
+        status:
+          type: string
+          description: "pending, verified, or rejected"
+        userId:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - type
+        - name
+        - telegram
+        - socialMedia
+        - about
+        - status
+        - createdAt
+
+    ApplicationInput:
+      type: object
+      properties:
+        type:
+          type: string
+          description: "kol or project"
+        name:
+          type: string
+        telegram:
+          type: string
+        socialMedia:
+          type: string
+        additionalLink1:
+          type: string
+        additionalLink2:
+          type: string
+        about:
+          type: string
+        userId:
+          type: integer
+          nullable: true
+      required:
+        - type
+        - name
+        - telegram
+        - socialMedia
+        - about
+
+    Section:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        icon:
+          type: string
+        description:
+          type: string
+        color:
+          type: string
+        sortOrder:
+          type: integer
+        isActive:
+          type: boolean
+      required:
+        - id
+        - name
+        - slug
+        - icon
+        - description
+        - color
+        - sortOrder
+        - isActive
+
+    SectionInput:
+      type: object
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        icon:
+          type: string
+        description:
+          type: string
+        color:
+          type: string
+        sortOrder:
+          type: integer
+        isActive:
+          type: boolean
+      required:
+        - name
+        - slug
+        - icon
+        - description
+        - color
+        - sortOrder
+        - isActive
+
+    Tag:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        sectionId:
+          type: integer
+          nullable: true
+        color:
+          type: string
+      required:
+        - id
+        - name
+        - slug
+        - color
+
+    TagInput:
+      type: object
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        sectionId:
+          type: integer
+          nullable: true
+        color:
+          type: string
+      required:
+        - name
+        - slug
+        - color
+
+    ApplicationStatusUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          description: "verified or rejected"
+      required:
+        - status
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        login:
+          type: string
+        rank:
+          type: string
+        evmWallet:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - login
+        - rank
+        - createdAt
+
+    UserProfileUpdate:
+      type: object
+      properties:
+        evmWallet:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+
+    UserRankUpdate:
+      type: object
+      properties:
+        rank:
+          type: string
+          description: "beginner, advanced, elite, or early"
+      required:
+        - rank
+
+    Post:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        imageUrl:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - title
+        - content
+        - createdAt
+
+    PostInput:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        imageUrl:
+          type: string
+          nullable: true
+      required:
+        - title
+        - content
+
+    DeleteResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required:
+        - success

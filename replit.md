@@ -2,7 +2,7 @@
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+pnpm workspace monorepo using TypeScript. Labz5 — InfoFi KOL management platform with KOL dashboard and Project zone.
 
 ## Stack
 
@@ -15,82 +15,80 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
+- **Frontend**: React + Vite + TailwindCSS
+- **Telegram**: @twa-dev/sdk (Telegram Mini App)
 
 ## Structure
 
 ```text
 artifacts-monorepo/
-├── artifacts/              # Deployable applications
-│   └── api-server/         # Express API server
+├── artifacts/
+│   ├── api-server/         # Express API server (port 8080)
+│   └── labz-app/           # React + Vite frontend (Telegram Mini App)
 ├── lib/                    # Shared libraries
 │   ├── api-spec/           # OpenAPI spec + Orval codegen config
-│   ├── api-client-react/   # Generated React Query hooks
+│   ├── api-client-react/   # Generated React Query hooks + custom hooks
 │   ├── api-zod/            # Generated Zod schemas from OpenAPI
 │   └── db/                 # Drizzle ORM schema + DB connection
-├── scripts/                # Utility scripts (single workspace package)
-│   └── src/                # Individual .ts scripts, run via `pnpm --filter @workspace/scripts run <script>`
-├── pnpm-workspace.yaml     # pnpm workspace (artifacts/*, lib/*, lib/integrations/*, scripts)
-├── tsconfig.base.json      # Shared TS options (composite, bundler resolution, es2022)
-├── tsconfig.json           # Root TS project references
-└── package.json            # Root package with hoisted devDeps
+├── pnpm-workspace.yaml
+├── tsconfig.base.json
+└── package.json
 ```
 
-## TypeScript & Composite Projects
+## DB Schema Tables
 
-Every package extends `tsconfig.base.json` which sets `composite: true`. The root `tsconfig.json` lists all packages as project references. This means:
+- `users` — login/passwordHash, evmWallet, bio, rank
+- `kols` — influencer profiles
+- `campaigns` — campaign listings with form fields
+- `campaign_submissions` — KOL applications to campaigns
+- `applications` — user applications (KOL/project role requests)
+- `cases` — case studies
+- `sections` — navigation sections
+- `tags` — campaign tags
+- `posts` — feed posts
+- `project_requests` — **NEW** project zone campaign requests (userId, projectName, twitterLink, websiteLink, projectInfo, campaignInfo, offer, selectedKolIds, status)
 
-- **Always typecheck from the root** — run `pnpm run typecheck` (which runs `tsc --build --emitDeclarationOnly`). This builds the full dependency graph so that cross-package imports resolve correctly. Running `tsc` inside a single package will fail if its dependencies haven't been built yet.
-- **`emitDeclarationOnly`** — we only emit `.d.ts` files during typecheck; actual JS bundling is handled by esbuild/tsx/vite...etc, not `tsc`.
-- **Project references** — when package A depends on package B, A's `tsconfig.json` must list B in its `references` array. `tsc --build` uses this to determine build order and skip up-to-date packages.
+## API Routes
 
-## Root Scripts
+- `GET/POST /api/auth/register`, `/api/auth/login` — auth
+- `GET/POST /api/kols` — KOL CRUD
+- `GET/POST /api/campaigns` — campaign CRUD
+- `GET/POST /api/submissions` — campaign submissions
+- `GET/POST /api/applications` — applications
+- `GET/POST /api/users` — user profiles
+- `GET/POST /api/posts` — feed
+- `GET/POST /api/project-requests` — **NEW** project campaign requests
+- `PATCH /api/project-requests/:id/status` — **NEW** admin approve/reject
 
-- `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages that define it
-- `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
+## User Zones
 
-## Packages
+### Public Zone
+- Browse KOLs and campaigns by section
+- Login/register
 
-### `artifacts/api-server` (`@workspace/api-server`)
+### KOL Dashboard (verified KOL users)
+- Profile (identity, socials, EVM wallet, bio)
+- Feed (InfoFi posts)
+- Campaigns (apply to campaigns by category)
+- My Applications (track application status)
 
-Express 5 API server. Routes live in `src/routes/` and use `@workspace/api-zod` for request and response validation and `@workspace/db` for persistence.
+### Project Zone (verified project users) — **NEW**
+- Profile (identity, socials, EVM wallet, bio, MY REQUESTS with status tracking)
+- Feed (same InfoFi posts)
+- KOLs (browse all KOLs with + add-to-cart buttons)
+- Cart (selected KOLs + Submit Campaign form with: project name, Twitter, website, project info, campaign info, compensation type)
 
-- Entry: `src/index.ts` — reads `PORT`, starts Express
-- App setup: `src/app.ts` — mounts CORS, JSON/urlencoded parsing, routes at `/api`
-- Routes: `src/routes/index.ts` mounts sub-routers; `src/routes/health.ts` exposes `GET /health` (full path: `/api/health`)
-- Depends on: `@workspace/db`, `@workspace/api-zod`
-- `pnpm --filter @workspace/api-server run dev` — run the dev server
-- `pnpm --filter @workspace/api-server run build` — production esbuild bundle (`dist/index.cjs`)
-- Build bundles an allowlist of deps (express, cors, pg, drizzle-orm, zod, etc.) and externalizes the rest
+## Admin Panel (`/dhbesjxbx`)
+- KOLs, Campaigns, Cases, Sections, Tags management
+- Applications (inbox) — approve/reject/verify users
+- Campaign Submissions management
+- **Project Requests** — **NEW** review and approve/reject project campaign requests
+- Members management with rank system
+- Feed posts
 
-### `lib/db` (`@workspace/db`)
-
-Database layer using Drizzle ORM with PostgreSQL. Exports a Drizzle client instance and schema models.
-
-- `src/index.ts` — creates a `Pool` + Drizzle instance, exports schema
-- `src/schema/index.ts` — barrel re-export of all models
-- `src/schema/<modelname>.ts` — table definitions with `drizzle-zod` insert schemas (no models definitions exist right now)
-- `drizzle.config.ts` — Drizzle Kit config (requires `DATABASE_URL`, automatically provided by Replit)
-- Exports: `.` (pool, db, schema), `./schema` (schema only)
-
-Production migrations are handled by Replit when publishing. In development, we just use `pnpm --filter @workspace/db run push`, and we fallback to `pnpm --filter @workspace/db run push-force`.
-
-### `lib/api-spec` (`@workspace/api-spec`)
-
-Owns the OpenAPI 3.1 spec (`openapi.yaml`) and the Orval config (`orval.config.ts`). Running codegen produces output into two sibling packages:
-
-1. `lib/api-client-react/src/generated/` — React Query hooks + fetch client
-2. `lib/api-zod/src/generated/` — Zod schemas
-
-Run codegen: `pnpm --filter @workspace/api-spec run codegen`
-
-### `lib/api-zod` (`@workspace/api-zod`)
-
-Generated Zod schemas from the OpenAPI spec (e.g. `HealthCheckResponse`). Used by `api-server` for response validation.
-
-### `lib/api-client-react` (`@workspace/api-client-react`)
-
-Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHealthCheck`, `healthCheck`).
-
-### `scripts` (`@workspace/scripts`)
-
-Utility scripts package. Each script is a `.ts` file in `src/` with a corresponding npm script in `package.json`. Run scripts via `pnpm --filter @workspace/scripts run <script>`. Scripts can import any workspace package (e.g., `@workspace/db`) by adding it as a dependency in `scripts/package.json`.
+## Design System
+- Terminal/hacker aesthetic
+- Black background (#0D0D0D)
+- Green accent (#00FF00)
+- Monospace fonts
+- No rounded corners (square borders)
